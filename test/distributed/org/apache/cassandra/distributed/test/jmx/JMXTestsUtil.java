@@ -64,7 +64,8 @@ public class JMXTestsUtil
     "org.apache.cassandra.db:type=StorageService:resumeMove", // throws since there is no move in progress
     "org.apache.cassandra.db:type=StorageService:abortMove", // throws since there is no move in progress
     "org.apache.cassandra.db:type=CIDRGroupsMappingManager:loadCidrGroupsCache", // AllowAllCIDRAuthorizer doesn't support this operation, as feature is disabled by default
-    "org.apache.cassandra.db:type=StorageService:forceRemoveCompletion" // deprecated (TCM)
+    "org.apache.cassandra.db:type=StorageService:forceRemoveCompletion", // deprecated (TCM)
+    "org.apache.cassandra.db:type=StorageService:createEpochUnsafe" // for Accord testing, but will likely be removed
     );
 
     /**
