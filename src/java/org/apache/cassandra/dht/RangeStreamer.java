@@ -58,7 +58,9 @@ import org.apache.cassandra.locator.ReplicaCollection;
 import org.apache.cassandra.locator.ReplicaCollection.Builder.Conflict;
 import org.apache.cassandra.locator.Replicas;
 import org.apache.cassandra.locator.NodeProximity;
+import org.apache.cassandra.schema.KeyspaceMetadata;
 import org.apache.cassandra.schema.ReplicationParams;
+import org.apache.cassandra.schema.Schema;
 import org.apache.cassandra.streaming.PreviewKind;
 import org.apache.cassandra.streaming.StreamOperation;
 import org.apache.cassandra.streaming.StreamPlan;
@@ -98,6 +100,7 @@ public class RangeStreamer
     private final StreamStateStore stateStore;
     private final MovementMap movements;
     private final MovementMap strictMovements;
+    private final boolean excludeAccordTables;
 
     public static class FetchReplica
     {
@@ -298,10 +301,11 @@ public class RangeStreamer
                          boolean connectSequentially,
                          int connectionsPerHost,
                          MovementMap movements,
-                         MovementMap strictMovements)
+                         MovementMap strictMovements,
+                         boolean excludeAccordTables)
     {
         this(metadata, streamOperation, useStrictConsistency, proximity, stateStore,
-             FailureDetector.instance, connectSequentially, connectionsPerHost, movements, strictMovements);
+             FailureDetector.instance, connectSequentially, connectionsPerHost, movements, strictMovements, excludeAccordTables);
     }
 
     RangeStreamer(ClusterMetadata metadata,
@@ -313,8 +317,10 @@ public class RangeStreamer
                   boolean connectSequentially,
                   int connectionsPerHost,
                   MovementMap movements,
-                  MovementMap strictMovements)
+                  MovementMap strictMovements,
+                  boolean excludeAccordTables)
     {
+        this.excludeAccordTables = excludeAccordTables;
         Preconditions.checkArgument(streamOperation == StreamOperation.BOOTSTRAP || streamOperation == StreamOperation.REBUILD, streamOperation);
         this.metadata = metadata;
         this.description = streamOperation.getDescription();
@@ -755,8 +761,17 @@ public class RangeStreamer
                 logger.debug("Source and our replicas {}", fetchReplicas);
                 logger.debug("Source {} Keyspace {}  streaming full {} transient {}", source, keyspace, full, transientReplicas);
 
-                /* Send messages to respective folks to stream data over to me */
-                streamPlan.requestRanges(source, keyspace, full, transientReplicas);
+                KeyspaceMetadata ksm = Schema.instance.getKeyspaceMetadata(keyspace);
+                if (excludeAccordTables && StreamPlan.hasAccordTables(ksm))
+                {
+                    String[] cfNames = StreamPlan.nonAccordTablesForKeyspace(ksm);
+                    if (cfNames != null)
+                        streamPlan.requestRanges(source, keyspace, full, transientReplicas, cfNames);
+                }
+                else
+                {
+                    streamPlan.requestRanges(source, keyspace, full, transientReplicas);
+                }
             });
         });
 
