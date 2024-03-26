@@ -62,6 +62,7 @@ import org.apache.cassandra.tcm.membership.NodeAddresses;
 import org.apache.cassandra.tcm.membership.NodeId;
 import org.apache.cassandra.tcm.membership.NodeState;
 import org.apache.cassandra.tcm.membership.NodeVersion;
+import org.apache.cassandra.tcm.ownership.AccordKeyspaces;
 import org.apache.cassandra.tcm.ownership.DataPlacement;
 import org.apache.cassandra.tcm.ownership.DataPlacements;
 import org.apache.cassandra.tcm.ownership.PrimaryRangeComparator;
@@ -93,6 +94,7 @@ public class ClusterMetadata
     public final Directory directory;
     public final TokenMap tokenMap;
     public final DataPlacements placements;
+    public final AccordKeyspaces accordKeyspaces;
     public final LockedRanges lockedRanges;
     public final InProgressSequences inProgressSequences;
     public final ImmutableMap<ExtensionKey<?,?>, ExtensionValue<?>> extensions;
@@ -126,6 +128,7 @@ public class ClusterMetadata
              directory,
              new TokenMap(partitioner),
              DataPlacements.EMPTY,
+             AccordKeyspaces.EMPTY,
              LockedRanges.EMPTY,
              InProgressSequences.EMPTY,
              ImmutableMap.of());
@@ -137,6 +140,7 @@ public class ClusterMetadata
                            Directory directory,
                            TokenMap tokenMap,
                            DataPlacements placements,
+                           AccordKeyspaces accordKeyspaces,
                            LockedRanges lockedRanges,
                            InProgressSequences inProgressSequences,
                            Map<ExtensionKey<?, ?>, ExtensionValue<?>> extensions)
@@ -148,6 +152,7 @@ public class ClusterMetadata
              directory,
              tokenMap,
              placements,
+             accordKeyspaces,
              lockedRanges,
              inProgressSequences,
              extensions);
@@ -160,6 +165,7 @@ public class ClusterMetadata
                            Directory directory,
                            TokenMap tokenMap,
                            DataPlacements placements,
+                           AccordKeyspaces accordKeyspaces,
                            LockedRanges lockedRanges,
                            InProgressSequences inProgressSequences,
                            Map<ExtensionKey<?, ?>, ExtensionValue<?>> extensions)
@@ -175,6 +181,7 @@ public class ClusterMetadata
         this.directory = directory;
         this.tokenMap = tokenMap;
         this.placements = placements;
+        this.accordKeyspaces = accordKeyspaces;
         this.lockedRanges = lockedRanges;
         this.inProgressSequences = inProgressSequences;
         this.extensions = ImmutableMap.copyOf(extensions);
@@ -230,6 +237,7 @@ public class ClusterMetadata
                                    capLastModified(directory, epoch),
                                    capLastModified(tokenMap, epoch),
                                    capLastModified(placements, epoch),
+                                   capLastModified(accordKeyspaces, epoch),
                                    capLastModified(lockedRanges, epoch),
                                    capLastModified(inProgressSequences, epoch),
                                    capLastModified(extensions, epoch));
@@ -250,6 +258,7 @@ public class ClusterMetadata
                                    directory,
                                    tokenMap,
                                    placements,
+                                   accordKeyspaces,
                                    lockedRanges,
                                    inProgressSequences,
                                    extensions);
@@ -371,6 +380,7 @@ public class ClusterMetadata
         private Directory directory;
         private TokenMap tokenMap;
         private DataPlacements placements;
+        private AccordKeyspaces accordKeyspaces;
         private LockedRanges lockedRanges;
         private InProgressSequences inProgressSequences;
         private final Map<ExtensionKey<?, ?>, ExtensionValue<?>> extensions;
@@ -385,6 +395,7 @@ public class ClusterMetadata
             this.directory = metadata.directory;
             this.tokenMap = metadata.tokenMap;
             this.placements = metadata.placements;
+            this.accordKeyspaces = metadata.accordKeyspaces;
             this.lockedRanges = metadata.lockedRanges;
             this.inProgressSequences = metadata.inProgressSequences;
             extensions = new HashMap<>(metadata.extensions);
@@ -504,6 +515,12 @@ public class ClusterMetadata
             return this;
         }
 
+        public Transformer withAccordKeyspace(String keyspace)
+        {
+            accordKeyspaces = accordKeyspaces.with(keyspace);
+            return this;
+        }
+
         public Transformer with(LockedRanges lockedRanges)
         {
             this.lockedRanges = lockedRanges;
@@ -590,6 +607,12 @@ public class ClusterMetadata
                 placements = placements.withLastModified(epoch);
             }
 
+            if (accordKeyspaces != base.accordKeyspaces)
+            {
+                modifiedKeys.add(MetadataKeys.ACCORD_KEYSPACES);
+                accordKeyspaces = accordKeyspaces.withLastModified(epoch);
+            }
+
             if (lockedRanges != base.lockedRanges)
             {
                 modifiedKeys.add(MetadataKeys.LOCKED_RANGES);
@@ -609,6 +632,7 @@ public class ClusterMetadata
                                                        directory,
                                                        tokenMap,
                                                        placements,
+                                                       accordKeyspaces,
                                                        lockedRanges,
                                                        inProgressSequences,
                                                        extensions),
@@ -624,6 +648,7 @@ public class ClusterMetadata
                                        directory,
                                        tokenMap,
                                        placements,
+                                       accordKeyspaces,
                                        lockedRanges,
                                        inProgressSequences,
                                        extensions);
@@ -877,6 +902,7 @@ public class ClusterMetadata
             Directory.serializer.serialize(metadata.directory, out, version);
             TokenMap.serializer.serialize(metadata.tokenMap, out, version);
             DataPlacements.serializer.serialize(metadata.placements, out, version);
+            AccordKeyspaces.serializer.serialize(metadata.accordKeyspaces, out, version);
             LockedRanges.serializer.serialize(metadata.lockedRanges, out, version);
             InProgressSequences.serializer.serialize(metadata.inProgressSequences, out, version);
             out.writeInt(metadata.extensions.size());
@@ -913,6 +939,7 @@ public class ClusterMetadata
             Directory dir = Directory.serializer.deserialize(in, version);
             TokenMap tokenMap = TokenMap.serializer.deserialize(in, version);
             DataPlacements placements = DataPlacements.serializer.deserialize(in, version);
+            AccordKeyspaces accordKeyspaces = AccordKeyspaces.serializer.deserialize(in, version);
             LockedRanges lockedRanges = LockedRanges.serializer.deserialize(in, version);
             InProgressSequences ips = InProgressSequences.serializer.deserialize(in, version);
             int items = in.readInt();
@@ -931,6 +958,7 @@ public class ClusterMetadata
                                        dir,
                                        tokenMap,
                                        placements,
+                                       accordKeyspaces,
                                        lockedRanges,
                                        ips,
                                        extensions);
@@ -953,6 +981,7 @@ public class ClusterMetadata
                     Directory.serializer.serializedSize(metadata.directory, version) +
                     TokenMap.serializer.serializedSize(metadata.tokenMap, version) +
                     DataPlacements.serializer.serializedSize(metadata.placements, version) +
+                    AccordKeyspaces.serializer.serializedSize(metadata.accordKeyspaces, version) +
                     LockedRanges.serializer.serializedSize(metadata.lockedRanges, version) +
                     InProgressSequences.serializer.serializedSize(metadata.inProgressSequences, version);
 
