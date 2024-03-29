@@ -5800,4 +5800,9 @@ public class DatabaseDescriptor
     {
         conf.tombstone_read_purgeable_metric_granularity = granularity;
     }
+
+    public static boolean getAccordEphemeralReadEnabledEnabled()
+    {
+        return conf.accord.ephemeralReadEnabled;
+    }
 }
