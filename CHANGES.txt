@@ -1,3 +1,6 @@
+cep-45-mutation-tracking
+ * Mutation tracking journal integration, read, and write path (CASSANDRA-20304, CASSANDRA-20305, CASSANDRA-20308)
+
 5.1
  * Throw new IndexBuildInProgressException when queries fail during index build, instead of IndexNotAvailableException (CASSANDRA-20402)
  * Fix Paxos repair interrupts running transactions (CASSANDRA-20469)
