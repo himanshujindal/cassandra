@@ -23,6 +23,7 @@ import org.junit.Test;
 import accord.primitives.Ranges;
 import accord.utils.Gen;
 import org.apache.cassandra.config.DatabaseDescriptor;
+import org.apache.cassandra.dht.Murmur3Partitioner;
 import org.apache.cassandra.io.Serializers;
 import org.apache.cassandra.io.util.DataOutputBuffer;
 import org.apache.cassandra.utils.AccordGenerators;
@@ -35,6 +36,8 @@ public class KeySerializersTest
     static
     {
         DatabaseDescriptor.clientInitialization();
+        // If the first example is "[]" then need a partitioner for static init
+        DatabaseDescriptor.setPartitionerUnsafe(Murmur3Partitioner.instance);
     }
 
     @Test
