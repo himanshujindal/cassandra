@@ -399,6 +399,25 @@ public class AutoRepairUtils
         logger.info("Set force repair repair type: {}, node: {}", repairType, hostId);
     }
 
+    /**
+     * Force repair for all nodes in the cluster for a specific keyspace due to RF change.
+     * This ensures data consistency after replication factor modifications.
+     */
+    public static void setForceRepairForKeyspace(RepairType repairType, String keyspaceName, String reason)
+    {
+        logger.info("Scheduling force repair for keyspace {} due to: {}", keyspaceName, reason);
+        
+        // Force repair on all nodes in the cluster
+        TreeSet<UUID> allNodes = getHostIdsInCurrentRing(repairType);
+        for (UUID hostId : allNodes)
+        {
+            setForceRepair(repairType, hostId);
+        }
+        
+        logger.info("Scheduled force repair for {} nodes in keyspace {} (reason: {})", 
+                   allNodes.size(), keyspaceName, reason);
+    }
+
     public static long getLastRepairTimeForNode(RepairType repairType, UUID hostId)
     {
         ResultMessage.Rows rows = selectLastRepairTimeForNode.execute(QueryState.forInternalCalls(),
