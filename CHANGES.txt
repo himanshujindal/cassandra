@@ -220,6 +220,7 @@
  * Add ELAPSED command to cqlsh (CASSANDRA-18861)
  * Add the ability to disable bulk loading of SSTables (CASSANDRA-18781)
  * Clean up obsolete functions and simplify cql_version handling in cqlsh (CASSANDRA-18787)
+ * Stop repair scheduler if two major versions are detected (CASSANDRA-20048)
 Merged from 5.0:
  * Sort SSTable TOC entries for determinism (CASSANDRA-20494)
  * Do not source cassandra-env.sh unnecessarily in nodetool and other tooling (CASSANDRA-20745)
