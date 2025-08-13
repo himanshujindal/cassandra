@@ -2690,7 +2690,7 @@ storage_compatibility_mode: NONE
 # repair_disk_headroom_reject_ratio: 0.2;
 
 # This is the deprecated config which was used to safeguard incremental repairs. Use repair_disk_headroom_reject_ratio
-# instead as it safeguards against all repairs
+# instead as it safeguards against all repairs.
 # incremental_repair_disk_headroom_reject_ratio: 0.2;
 
 # Configuration for Auto Repair Scheduler.

@@ -530,7 +530,7 @@ public class ActiveRepairServiceTest
         }
     }
 
-    public void testVerifyDiskHeadroomThresholdFullRepair()
+    public void testVerifyDefaultDiskHeadroomThreshold()
     {
         Assert.assertTrue(ActiveRepairService.verifyDiskHeadroomThreshold(TimeUUID.maxAtUnixMillis(0), PreviewKind.NONE));
     }
