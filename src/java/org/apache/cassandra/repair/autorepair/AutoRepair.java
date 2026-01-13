@@ -133,6 +133,9 @@ public class AutoRepair
             AutoRepairConfig config = DatabaseDescriptor.getAutoRepairConfig();
             AutoRepairUtils.setup();
 
+            // Register RF change listener for automatic repair scheduling
+            org.apache.cassandra.schema.Schema.instance.registerListener(new ReplicationFactorChangeListener());
+
             for (AutoRepairConfig.RepairType repairType : AutoRepairConfig.RepairType.values())
             {
                 if (config.isAutoRepairEnabled(repairType))
